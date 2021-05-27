@@ -13,5 +13,8 @@ extension Notification.Name {
     
     static let didLogOut = Notification.Name("didLogOut")
     static let didRenameTitle = Notification.Name("didRenameTitle")
+    static let didDeleteItem = Notification.Name("didDeleteItem")
+    static let addNewLocation = Notification.Name("addNewLocation")
+    static let didChangeUserInfo = Notification.Name("didChangeUserInfo")
 
 }

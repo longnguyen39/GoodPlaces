@@ -16,19 +16,29 @@ class HomeViewController: UIViewController {
 
     private var btnD: CGFloat = 36
     private var ivD: CGFloat = 32
+    
     private let mapView = MKMapView()
+    private var locationManager: CLLocationManager!
+    
     private var logOutObserver: NSObjectProtocol?
+    private var deletionObserver: NSObjectProtocol?
+    private var userInfoObserver: NSObjectProtocol?
+    
     private var profileURL: URL? {
         return URL(string: userInfo?.profileImageUrl ?? "no url")
     }
     
-    private var locationManager: CLLocationManager!
     private var arrayLocation = [SavedLocations]()
     private var selectedAnnoInfo: SelectedAnno?
     private var route: MKRoute? //use this to generate polyline
-    private var titleChanged = "no title"
+    private var titleNote = "no title" //for rename title
     private var arrayTwoAnno = [MKPointAnnotation]()
     private var hasPolylines = false
+    
+    private var latShare: CLLocationDegrees?
+    private var longShare: CLLocationDegrees?
+    private var titleShare: String?
+
     
 //MARK: - Components
     
@@ -43,13 +53,13 @@ class HomeViewController: UIViewController {
     }()
 
     
-    private let friendsButton: UIButton = {
+    private let shareButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setBackgroundImage(UIImage(systemName: "person.2.circle.fill"), for: .normal)
+        btn.setBackgroundImage(UIImage(systemName: "paperplane.circle.fill"), for: .normal)
         btn.tintColor = .white
         btn.backgroundColor = .black
-        btn.isEnabled = false
-        btn.addTarget(self, action: #selector(showlistFriendsPage), for: .touchUpInside)
+        btn.alpha = 0 //for animation stuff
+        btn.addTarget(self, action: #selector(shareSavedLocation), for: .touchUpInside)
         
         return btn
     }()
@@ -126,7 +136,7 @@ class HomeViewController: UIViewController {
     //when "userInfo" got changed, the "didSet" got called
     var userInfo: User? {
         didSet {
-            print("DEBUG: userInfo just changes")
+            print("DEBUG-HomeVC: userInfo just changes")
             usernameLabel.text = userInfo?.username ?? "Tap to sign in"
             profileImageView.sd_setImage(with: profileURL)
         }
@@ -164,18 +174,18 @@ class HomeViewController: UIViewController {
         savedPlacesButton.setDimensions(height: btnD-2, width: btnD-2)
         savedPlacesButton.layer.cornerRadius = (btnD-2) / 2
         
-        //friendsButton
-        view.addSubview(friendsButton)
-        friendsButton.anchor(right: view.rightAnchor, paddingRight: 12)
-        friendsButton.centerY(inView: savedPlacesButton)
-        friendsButton.setDimensions(height: btnD, width: btnD)
-        friendsButton.layer.cornerRadius = btnD/2
-        
+        //shareButton
+        view.addSubview(shareButton)
+        shareButton.anchor(right: view.rightAnchor, paddingRight: 12)
+        shareButton.centerY(inView: savedPlacesButton)
+        shareButton.setDimensions(height: btnD, width: btnD)
+        shareButton.layer.cornerRadius = btnD/2
+        shareButton.isHidden = true
         
         //emailLabel and view
         view.addSubview(labelView)
         labelView.centerY(inView: savedPlacesButton)
-        labelView.anchor(left: savedPlacesButton.rightAnchor, right: friendsButton.leftAnchor, paddingLeft: 28, paddingRight: 28, height: btnD)
+        labelView.anchor(left: savedPlacesButton.rightAnchor, right: shareButton.leftAnchor, paddingLeft: 28, paddingRight: 28, height: btnD)
         
         labelView.addSubview(profileImageView)
         profileImageView.anchor(left: labelView.leftAnchor, paddingLeft: 6)
@@ -230,6 +240,20 @@ class HomeViewController: UIViewController {
             strongSelf.showLoginPage()
         }
         
+        deletionObserver = NotificationCenter.default.addObserver(forName: .didDeleteItem, object: nil, queue: .main) { [weak self] _ in
+            
+            print("DEBUG-HomeVC: item deleted notified..")
+            guard let strongSelf = self else { return }
+            strongSelf.removeAllAnno()
+            strongSelf.fetchSavedLocations()
+        }
+        
+        userInfoObserver = NotificationCenter.default.addObserver(forName: .didChangeUserInfo, object: nil, queue: .main) { [weak self] _ in
+            print("DEBUG-HomeVC: new username notified..")
+            guard let strongSelf = self else { return }
+            strongSelf.fetchUserData() //fetch again to fill new data in userInfo and trigger the "didSet"
+        }
+        
     }
     
     //this func is exclusively unique for protocol
@@ -237,12 +261,18 @@ class HomeViewController: UIViewController {
         if let observer1 = logOutObserver {
             NotificationCenter.default.removeObserver(observer1)
         }
+        if let observer2 = deletionObserver {
+            NotificationCenter.default.removeObserver(observer2)
+        }
+        if let observer3 = userInfoObserver {
+            NotificationCenter.default.removeObserver(observer3)
+        }
         
     }
     
 //MARK: - Show stuff
     
-    func showStuff(controller: UIViewController) {
+    func showNav(controller: UIViewController) {
         let nav = UINavigationController(rootViewController: controller)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
@@ -256,20 +286,19 @@ class HomeViewController: UIViewController {
             alertSignIn(Title: "Sign in required!", comment: "Please sign in to see your profile.", buttonNote1: "Cancel", buttonNote2: "Sign in")
         } else {
             let vc = SettingViewController()
-            showStuff(controller: vc)
+            showNav(controller: vc)
         }
         
     }
     
-    @objc func showlistFriendsPage() {
+    @objc func shareSavedLocation() {
         let mail = Auth.auth().currentUser?.email
         
         if mail == nil {
             print("DEBUG-HomeVC: user not signed in, no Friends page..")
             alertSignIn(Title: "Sign in required!", comment: "Please sign in to see your list of friends.", buttonNote1: "Cancel", buttonNote2: "Sign in")
         } else {
-            let vc = FriendsViewController()
-            showStuff(controller: vc)
+            nowShare()
         }
         
     }
@@ -282,11 +311,30 @@ class HomeViewController: UIViewController {
             alertSignIn(Title: "Sign in required!", comment: "Please sign in to see your saved places.", buttonNote1: "Cancel", buttonNote2: "Sign in")
         } else {
             let vc = savedPlacesViewController()
-            showStuff(controller: vc)
+            showNav(controller: vc)
         }
         
     }
     
+//MARK: - share stuff
+    
+    //share the location (or image if you want)
+    func nowShare() {
+        
+        let url = Service.sharingLocationURL(lat: latShare!, long: longShare!, titleL: titleShare!)
+        
+        guard let titleForShare = titleShare else { return }
+        guard let LocationUrl = URL(string: url) else {
+            print("DEBUG-MapVC: error setting urlString for sharing")
+            self.alert(error: "Please make sure that the name of the location has no apostrophe ", buttonNote: "OK")
+            return
+        }
+        
+        let shareText = "Share \"\(titleForShare)\""
+        
+        let vc = UIActivityViewController(activityItems: [shareText, LocationUrl], applicationActivities: nil)
+        present(vc, animated: true, completion: nil)
+    }
     
 //MARK: - API stuff
     
@@ -337,8 +385,8 @@ class HomeViewController: UIViewController {
             print("DEBUG-HomeVC: user not signed in, no location mark..")
             alertSignIn(Title: "Sign in required!", comment: "Please sign in to save places.", buttonNote1: "Cancel", buttonNote2: "Sign in")
         } else {
-            centerCurrentLocation() //let re-center to current location
-            //let's wait for 0.5 sec to show user his current location
+            centerCurrentLocation() //let's re-center to current location
+            //let's wait for 0.3 sec to show user his current location
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 self.textBox()
             }
@@ -357,8 +405,8 @@ class HomeViewController: UIViewController {
             if textField.text?.isEmpty == false && textField.text?.starts(with: " ") == false {
                 
                 self.showPresentLoadingView(true, message: "Saving")
-                self.titleChanged = textField.text!
-                print("DEBUG: title created: \(self.titleChanged)")
+                self.titleNote = textField.text!
+                print("DEBUG: title created: \(self.titleNote)")
                 self.markLocation()
                 
             } else {
@@ -387,7 +435,7 @@ class HomeViewController: UIViewController {
         }
         guard let long = locationManager.location?.coordinate.longitude else { return }
         
-        Service.uploadLocation(title: titleChanged, lat: lat, long: long) { error in
+        Service.uploadLocation(title: titleNote, lat: lat, long: long) { error in
             
             //let's delay for 0.3 sec to show user the loadingIndicator
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -407,7 +455,7 @@ class HomeViewController: UIViewController {
     func succesfullyMarkLocation() {
         self.showSuccess(show: true, note: "Saved", view: self.view)
         print("DEBUG: successfully save and upload location")
-        self.addAnnoToCurrentLocation(newTitle: self.titleChanged) //add an anno to indicate current location
+        self.addAnnoToCurrentLocation(newTitle: self.titleNote) //add an anno to indicate current location
         self.showSuccess(show: false, note: "Saved", view: self.view) //got delay a bit to show success mark
     }
     
@@ -482,11 +530,13 @@ class HomeViewController: UIViewController {
             self.centerButton.alpha = 0
         } completion: { _ in
             self.bottomView.isHidden = false
-            self.bottomView.delegate = self
+            self.shareButton.isHidden = false
+            self.bottomView.delegate = self //for protocol from bottomView
             self.bottomView.titleLabel = title
             self.bottomView.distanceMile = distance
             UIView.animate(withDuration: 0.3) {
                 self.bottomView.alpha = 1
+                self.shareButton.alpha = 1
             }
         }
         
@@ -521,7 +571,7 @@ class HomeViewController: UIViewController {
         Service.fetchLocations { locationArray in
             
             self.arrayLocation = locationArray
-            
+            print("DEBUG-HomeVC: fetching locations..")
             for info in self.arrayLocation {
                 self.addAnnoToSavedLocations(lat: info.latitude, long: info.longtitude, titleFetch: info.title)
             }
@@ -600,7 +650,7 @@ extension HomeViewController: MKMapViewDelegate {
         return MKOverlayRenderer()
     }
     
-    //this dictates what happen when we tap on an annotation
+    //this dictates what happen when we tap on an annotation OR add a new one
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         
         guard let toCoor = view.annotation?.coordinate else { return }
@@ -620,22 +670,26 @@ extension HomeViewController: MKMapViewDelegate {
         if selectedAnnoInfo == pickedAnno {
             print("DEBUG-HomeVC: we already have a polyline for this")
         } else {
-            //this case means that user has tapped a new anno
+            //this case means that user has tapped a new anno after tapping a previous one
             if hasPolylines {
                 //remove the previous polyline
-                print("DEBUG: removing a polyline..")
+                print("DEBUG-HomeVC: removing a polyline..")
                 guard let polyline = self.route?.polyline else { return }
                 self.mapView.removeOverlay(polyline)
                 
                 //present a new one, zoom to it, update info of BottomAction
                 arrayTwoAnno = array
-                selectedAnnoInfo = SelectedAnno(lat: toCoor.latitude, long: toCoor.longitude, title: titleDestination)
+                selectedAnnoInfo = SelectedAnno(lat: toCoor.latitude, long: toCoor.longitude, title: titleDestination) //for checking if user has tapped on this anno
                 
+                //let's do some cool stuff
                 generatePolyline(toCoor: toCoor)
                 mapView.zoomToFit(annotations: self.arrayTwoAnno) //zoom to 2 points in the array
                 configureBottomAction(title: titleDestination ?? "nope", distance: distanceToD)
+                latShare = toCoor.latitude
+                longShare = toCoor.longitude
+                titleShare = titleDestination
                 
-            } else { //user has not tapped on any anno yet
+            } else { //user has initially tapped on an anno
                 
                 //let's pass info to global-class var
                 arrayTwoAnno = array
@@ -645,6 +699,9 @@ extension HomeViewController: MKMapViewDelegate {
                 generatePolyline(toCoor: toCoor)
                 mapView.zoomToFit(annotations: self.arrayTwoAnno) //zoom to 2 points in the array
                 configureBottomAction(title: titleDestination ?? "nope", distance: distanceToD)
+                latShare = toCoor.latitude
+                longShare = toCoor.longitude
+                titleShare = titleDestination
                 hasPolylines = true
             }
         }
@@ -657,11 +714,13 @@ extension HomeViewController: MKMapViewDelegate {
 //MARK: - BottomActionDelegate
 //remember to write ".delegate = self" in viewDidLoad
 extension HomeViewController: BottomActionDelegate {
+    
     func zoom() {
         mapView.zoomToFit(annotations: arrayTwoAnno) //"arrayTwoAnno" got filled up when we tappe on an anno
     }
     
     func dismissBottomAction() {
+        print("DEBUG-HomeVC: protocol from BottomAction, dismiss BottomAction")
         removeAllPolyline()
         centerCurrentLocation()
         hasPolylines = false
@@ -669,8 +728,10 @@ extension HomeViewController: BottomActionDelegate {
         
         UIView.animate(withDuration: 0.3) {
             self.bottomView.alpha = 0
+            self.shareButton.alpha = 0
         } completion: { _ in
             self.bottomView.isHidden = true
+            self.shareButton.isHidden = true
             UIView.animate(withDuration: 0.3) {
                 self.markLocationButton.alpha = 1
                 self.centerButton.alpha = 1

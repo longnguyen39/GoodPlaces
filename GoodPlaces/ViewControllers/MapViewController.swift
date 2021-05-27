@@ -8,11 +8,13 @@
 import UIKit
 import MapKit
 import Firebase
+import MobileCoreServices //to share location via shareSheet
 
 class MapViewController: UIViewController {
 
     var titleChanged = "title changed"
     var locationInfo: SavedLocations? //got data passed from SavedPlacesVC
+    private var didRename = false
     
     private let mapView = MKMapView()
     private var locationManager: CLLocationManager!
@@ -89,11 +91,14 @@ class MapViewController: UIViewController {
     func configureUI() {
         view.backgroundColor = .white
         guard let titlePrivate = locationInfo?.title else { return }
-        configureNavigationBar(title: titlePrivate, preferLargeTitle: false, backgroundColor: #colorLiteral(red: 0.2898526224, green: 0.9193441901, blue: 0.5178573741, alpha: 1), buttonColor: .black)
+        configureNavigationBar(title: titlePrivate, preferLargeTitle: false, backgroundColor: #colorLiteral(red: 0.2898526224, green: 0.9193441901, blue: 0.5178573741, alpha: 1), buttonColor: .blue)
         
         navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "chevron.backward"), style: .done, target: self, action: #selector(backToList))
         
-        navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "pencil"), style: .done, target: self, action: #selector(editTitleTapped))
+        //set multiple barButtonItems on the right
+        let btn1 = UIBarButtonItem(image: UIImage(systemName: "paperplane"), style: .done, target: self, action: #selector(shareLocation))
+        let btn2 = UIBarButtonItem(image: UIImage(systemName: "pencil"), style: .done, target: self, action: #selector(editTitleTapped))
+        navigationItem.setRightBarButtonItems([btn1, btn2], animated: true)
         
         //distance stuff
         view.addSubview(distanceView)
@@ -117,9 +122,8 @@ class MapViewController: UIViewController {
         openMapButton.anchor(left: zoomOutButton.rightAnchor, right: zoomInButton.leftAnchor, paddingLeft: 12, paddingRight: 12, height: 50)
         openMapButton.centerY(inView: zoomInButton)
         openMapButton.layer.cornerRadius = 12
-        
-        
     }
+    
     
 //MARK: - mapView
     
@@ -138,9 +142,13 @@ class MapViewController: UIViewController {
     
     @objc func backToList() {
         navigationController?.popViewController(animated: true)
-        
-        //send the notification to SavedPlacesVC to reload and fetch data. it will be handy if user just change the title
-        NotificationCenter.default.post(name: .didRenameTitle, object: nil)
+        if didRename {
+            print("DEBUG-MapVC: did rename")
+            //send the notification to SavedPlacesVC to reload and fetch data
+            NotificationCenter.default.post(name: .didRenameTitle, object: nil)
+        } else {
+            print("DEBUG-MapVC: no rename")
+        }
     }
     
     @objc func editTitleTapped() {
@@ -169,6 +177,30 @@ class MapViewController: UIViewController {
         print("DEBUG-MapVC: openMapButton tapped..")
         openMap(lati: locationInfo?.latitude, longi: locationInfo?.longtitude, nameMap: locationInfo?.title)
     }
+    
+//MARK: - Share location
+    
+    //share the location (or image if you want)
+    @objc func shareLocation() {
+        guard let titleLocation = locationInfo?.title else { return }
+        guard let lati = locationInfo?.latitude else { return }
+        guard let longi = locationInfo?.longtitude else { return }
+        
+        let url = Service.sharingLocationURL(lat: lati, long: longi, titleL: titleLocation)
+        
+        guard let LocationUrl = URL(string: url) else {
+            print("DEBUG-MapVC: error setting urlString for sharing")
+            self.alert(error: "Please make sure that the name of the location has no apostrophe ", buttonNote: "OK")
+            return
+        }
+        
+        let shareText = "Share \"\(titleLocation)\""
+        
+        let vc = UIActivityViewController(activityItems: [shareText, LocationUrl], applicationActivities: nil)
+        present(vc, animated: true, completion: nil)
+    }
+    
+    
     
 //MARK: - Map stuff
     
@@ -302,6 +334,7 @@ class MapViewController: UIViewController {
         self.navigationItem.title = newTitle
         
         self.showSuccess(show: false, note: "Saved", view: self.view) //got delay a bit to show success mark
+        self.didRename = true
     }
     
     

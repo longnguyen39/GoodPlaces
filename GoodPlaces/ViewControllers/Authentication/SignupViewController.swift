@@ -231,7 +231,7 @@ class SignupViewController: UIViewController {
         
     }
     
-//MARK: - Upload Image
+//MARK: - present ImagePicker
     
     @objc func imageTapped() {
         print("DEBUG-SignupVC: image tapped")

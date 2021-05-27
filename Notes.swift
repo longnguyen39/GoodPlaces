@@ -7,6 +7,12 @@
 
 /*
  
- 
+ pod 'Firebase/Core'
+ pod 'Firebase/Storage'
+ pod 'Firebase/Auth'
+ pod 'Firebase/Firestore'
+ pod 'JGProgressHUD'
+ pod 'GeoFire'
+ pod 'SDWebImage'
  
  */

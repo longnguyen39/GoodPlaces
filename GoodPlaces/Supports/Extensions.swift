@@ -119,7 +119,7 @@ extension UIViewController {
         if show == true {
             UIViewController.hud.show(in: view)
         } else {
-            UIViewController.hud.dismiss(afterDelay: 1.5, animated: true)
+            UIViewController.hud.dismiss(afterDelay: 1.0, animated: true)
         }
     }
     
@@ -139,7 +139,7 @@ extension UIViewController {
     
     //let do some alerts
     func alert (error: String, buttonNote: String) {
-        let alert = UIAlertController (title: "Error!!", message: "\(error).", preferredStyle: .alert)
+        let alert = UIAlertController (title: "Error!!", message: "\(error)", preferredStyle: .alert)
         let tryAgain = UIAlertAction (title: buttonNote, style: .cancel, handler: nil)
                 
         alert.addAction(tryAgain)
@@ -147,6 +147,7 @@ extension UIViewController {
     }
     
 //MARK: - show the loadingView
+    
     func showPresentLoadingView(_ present: Bool, message: String? = nil) {
         
         if present {
@@ -224,7 +225,7 @@ extension UIViewController {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground() //just call it
         appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.black] //enables us to set our big titleColor to black
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.black] //set titleColor
         appearance.backgroundColor = backgroundColor
         
         //just call it for the sake of calling it

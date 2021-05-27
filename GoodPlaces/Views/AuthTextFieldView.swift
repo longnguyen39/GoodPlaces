@@ -12,12 +12,7 @@ class AuthTextFieldView: UIView {
 //MARK: - Components
     
     
-    var textField: CustomTextField = {
-        let tf = CustomTextField()
-        
-        return tf
-    }()
-    
+    var textField: CustomTextField = CustomTextField()
     
     private let imagePict: UIImageView = {
         let im = UIImageView()

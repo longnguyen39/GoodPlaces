@@ -17,6 +17,8 @@
 		412061A9263F118F00564B49 /* ProtocolVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 412061A8263F118F00564B49 /* ProtocolVC.swift */; };
 		412061C9263F326200564B49 /* ImageUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 412061C8263F326200564B49 /* ImageUploader.swift */; };
 		412061CD263FE05000564B49 /* ProfileButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 412061CC263FE05000564B49 /* ProfileButtons.swift */; };
+		4137D3C4265AE16300F4E2CA /* LocationCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4137D3C3265AE16300F4E2CA /* LocationCell.swift */; };
+		4137D3C7265AFD3D00F4E2CA /* LocationPin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4137D3C6265AFD3D00F4E2CA /* LocationPin.swift */; };
 		4163C816263E85DB00BEA3D7 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4163C815263E85DB00BEA3D7 /* ProfileView.swift */; };
 		4163C819263E913000BEA3D7 /* Authentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4163C818263E913000BEA3D7 /* Authentication.swift */; };
 		4165F48C264062DA00300071 /* SavedLocations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4165F48B264062DA00300071 /* SavedLocations.swift */; };
@@ -32,7 +34,6 @@
 		41E6A1D0263BB50000793489 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 41E6A1CE263BB50000793489 /* LaunchScreen.storyboard */; };
 		41E6A1D9263BB51D00793489 /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E6A1D8263BB51D00793489 /* HomeViewController.swift */; };
 		41E6A1E2263BB75E00793489 /* SettingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E6A1E1263BB75E00793489 /* SettingViewController.swift */; };
-		41E6A1E5263BB76D00793489 /* FriendsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E6A1E4263BB76D00793489 /* FriendsViewController.swift */; };
 		41E6A1E8263BB77F00793489 /* SavedPlacesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E6A1E7263BB77F00793489 /* SavedPlacesViewController.swift */; };
 		41E6A1EC263BB79600793489 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E6A1EB263BB79600793489 /* LoginViewController.swift */; };
 		41E6A1EF263BB7A100793489 /* SignupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E6A1EE263BB7A100793489 /* SignupViewController.swift */; };
@@ -52,6 +53,8 @@
 		412061A8263F118F00564B49 /* ProtocolVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtocolVC.swift; sourceTree = "<group>"; };
 		412061C8263F326200564B49 /* ImageUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageUploader.swift; sourceTree = "<group>"; };
 		412061CC263FE05000564B49 /* ProfileButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileButtons.swift; sourceTree = "<group>"; };
+		4137D3C3265AE16300F4E2CA /* LocationCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationCell.swift; sourceTree = "<group>"; };
+		4137D3C6265AFD3D00F4E2CA /* LocationPin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPin.swift; sourceTree = "<group>"; };
 		4163C815263E85DB00BEA3D7 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		4163C818263E913000BEA3D7 /* Authentication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Authentication.swift; sourceTree = "<group>"; };
 		4165F48B264062DA00300071 /* SavedLocations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedLocations.swift; sourceTree = "<group>"; };
@@ -69,7 +72,6 @@
 		41E6A1D1263BB50000793489 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		41E6A1D8263BB51D00793489 /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
 		41E6A1E1263BB75E00793489 /* SettingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingViewController.swift; sourceTree = "<group>"; };
-		41E6A1E4263BB76D00793489 /* FriendsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsViewController.swift; sourceTree = "<group>"; };
 		41E6A1E7263BB77F00793489 /* SavedPlacesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedPlacesViewController.swift; sourceTree = "<group>"; };
 		41E6A1EB263BB79600793489 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
 		41E6A1EE263BB7A100793489 /* SignupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupViewController.swift; sourceTree = "<group>"; };
@@ -154,6 +156,8 @@
 				4163C815263E85DB00BEA3D7 /* ProfileView.swift */,
 				412061CC263FE05000564B49 /* ProfileButtons.swift */,
 				41C4205B2646826400539A25 /* BottomAction.swift */,
+				4137D3C3265AE16300F4E2CA /* LocationCell.swift */,
+				4137D3C6265AFD3D00F4E2CA /* LocationPin.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -178,7 +182,6 @@
 				41E6A1E1263BB75E00793489 /* SettingViewController.swift */,
 				41E6A1E7263BB77F00793489 /* SavedPlacesViewController.swift */,
 				418626C92641F28800804ECD /* MapViewController.swift */,
-				41E6A1E4263BB76D00793489 /* FriendsViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -355,11 +358,12 @@
 				41E6A1EC263BB79600793489 /* LoginViewController.swift in Sources */,
 				41E6A232263BCA5A00793489 /* AuthTextFieldView.swift in Sources */,
 				41E6A1C6263BB4FF00793489 /* SceneDelegate.swift in Sources */,
+				4137D3C4265AE16300F4E2CA /* LocationCell.swift in Sources */,
 				411322E5263C6DD600589258 /* Notes.swift in Sources */,
 				4113230D263D1D7300589258 /* User.swift in Sources */,
-				41E6A1E5263BB76D00793489 /* FriendsViewController.swift in Sources */,
 				4165F48C264062DA00300071 /* SavedLocations.swift in Sources */,
 				4163C816263E85DB00BEA3D7 /* ProfileView.swift in Sources */,
+				4137D3C7265AFD3D00F4E2CA /* LocationPin.swift in Sources */,
 				41E6A1F7263BB91900793489 /* Extensions.swift in Sources */,
 				412061A9263F118F00564B49 /* ProtocolVC.swift in Sources */,
 				419396EA2647344D00E245E8 /* SelectedAnno.swift in Sources */,

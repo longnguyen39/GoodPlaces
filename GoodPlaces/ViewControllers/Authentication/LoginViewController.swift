@@ -231,7 +231,8 @@ class LoginViewController: UIViewController {
             self.showLoader(show: false, view: self.view)
             
             if let e = error?.localizedDescription {
-                print("DEBUG-LoginVC: fail to log in \(e)")
+                print("DEBUG-LoginVC: fail to logIn - \(e)")
+                self.alert(error: e, buttonNote: "Try again")
                 return
             }
             

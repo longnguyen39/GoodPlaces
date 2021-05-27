@@ -16,7 +16,7 @@ protocol BottomActionDelegate: class {
 class BottomAction: UIView {
     
     //when var got modified, the didSet gets called. we can bring all func in didSet to viewDidLoad
-    var titleLabel = "title" {
+    var titleLabel = "title..." {
         didSet { locationLabel.text = titleLabel }
     }
     
@@ -119,7 +119,7 @@ class BottomAction: UIView {
         
         //zoomButton
         addSubview(zoomButton)
-        zoomButton.anchor(top: locationLabel.bottomAnchor, right: rightAnchor, paddingTop: 30, paddingRight: 12, width: 50, height: 50)
+        zoomButton.anchor(bottom: safeAreaLayoutGuide.bottomAnchor, right: rightAnchor, paddingBottom: 20, paddingRight: 12, width: 50, height: 50)
         zoomButton.layer.cornerRadius = 50 / 2
         
         //openMapButton

@@ -59,8 +59,6 @@ struct Service {
     }
     
     
-    
-    
     static func uploadLocation(title: String, lat: CLLocationDegrees, long: CLLocationDegrees, completionBlock: @escaping(Error?) -> Void) {
         
         guard let email = Auth.auth().currentUser?.email else { return }
@@ -83,8 +81,6 @@ struct Service {
         
         //upload to database
         Firestore.firestore().collection("users").document(email).collection("saved-locations").document(timeKey).setData(data, completion: completionBlock)
-        
-        
     }
     
     
@@ -106,6 +102,26 @@ struct Service {
         }
     }
     
+    
+    static func deleteItem(nameItem: String, completionBlock: @escaping(Error?) -> Void) {
+        
+        guard let userEmail = Auth.auth().currentUser?.email else {
+            print("DEBUG-Service: cannot fetch email..")
+            return
+        }
+        
+        Firestore.firestore().collection("users").document(userEmail).collection("saved-locations").document(nameItem).delete(completion: completionBlock)
+        
+    }
+    
+    
+    static func sharingLocationURL(lat: Double, long: Double, titleL: String) -> String {
+        
+        let titleNoSpace = titleL.replacingOccurrences(of: " ", with: "") //to construct the url
+        let urlString = "https://maps.apple.com?ll=\(lat),\(long)&q=\(titleNoSpace)&_ext=EiQpzUnuGHYRQUAx0xl+LFqWXcA5zUnuGHYRQUBB0xl+LFqWXcA%3D&t=m" //this url is contructed from messing up with telegram
+        
+        return urlString
+    }
     
     
 }

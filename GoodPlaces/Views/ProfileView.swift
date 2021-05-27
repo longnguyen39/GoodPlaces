@@ -10,7 +10,7 @@ import Firebase
 import SDWebImage
 
 protocol ProfileViewDelegate: class {
-    func showLogin()
+    func replaceProfileImage()
 }
 
 class ProfileView: UIView {
@@ -25,8 +25,8 @@ class ProfileView: UIView {
     
 //MARK: - Components
     
-    //gotta make this "lazy var" to load the tap gesture
-    private lazy var profileImageView: UIImageView = {
+    //gotta make this "lazy var" to load the tap gesture. No "private" since we need to access it from SettingVC
+    lazy var profileImageView: UIImageView = {
         let iv = UIImageView()
         iv.image = UIImage(systemName: "person.circle")
         iv.tintColor = .lightGray
@@ -43,7 +43,8 @@ class ProfileView: UIView {
         return iv
     }()
     
-    private let usernameLabel: UILabel = {
+    //no "private" since we need to access it in SettingVC
+    let usernameLabel: UILabel = {
         let lb = UILabel()
         lb.text = "username.."
         lb.font = UIFont.systemFont(ofSize: 18, weight: .bold)
@@ -85,7 +86,7 @@ class ProfileView: UIView {
         didSet {
             usernameLabel.text = userInfo?.username
             emailLabel.text = userInfo?.email
-            placesLabel.attributedText = attributedStatText(value: userInfo?.stats.savedPlaces ?? 0, label: "Places")
+            placesLabel.attributedText = attributedStatText(value: userInfo?.stats.savedPlaces ?? 0, label: "Saved Places")
             profileImageView.sd_setImage(with: profileURL)
         }
     }
@@ -118,14 +119,17 @@ class ProfileView: UIView {
         emailLabel.anchor(top: usernameLabel.bottomAnchor, left: profileImageView.leftAnchor, right: rightAnchor, paddingTop: 8, paddingLeft: 4, paddingRight: 14)
         
         //add stats Label
-        let stack = UIStackView(arrangedSubviews: [friendsLabel, placesLabel])
-        stack.axis = .horizontal
-        stack.distribution = .equalSpacing
-        addSubview(stack)
-        stack.anchor(left: profileImageView.rightAnchor, right: rightAnchor, paddingLeft: 16, paddingRight: 16)
-        stack.centerY(inView: profileImageView)
-        
-        
+//        let stack = UIStackView(arrangedSubviews: [friendsLabel, placesLabel])
+//        stack.axis = .horizontal
+//        stack.distribution = .equalSpacing
+//        addSubview(stack)
+//        stack.anchor(left: profileImageView.rightAnchor, right: rightAnchor, paddingLeft: 16, paddingRight: 16)
+//        stack.centerY(inView: profileImageView)
+
+        //placesLabel
+        addSubview(placesLabel)
+        placesLabel.anchor(left: profileImageView.rightAnchor, right: rightAnchor, paddingLeft: 30, paddingRight: 30)
+        placesLabel.centerY(inView: profileImageView)
     }
     
     required init?(coder: NSCoder) {
@@ -135,14 +139,14 @@ class ProfileView: UIView {
 //MARK: - Actions
     
     @objc func changeProfileImage() {
-        print("DEBUG-ProfileView: image tapped - log out")
-        delegate?.showLogin()
+        print("DEBUG-ProfileView: image tapped")
+        delegate?.replaceProfileImage()
     }
     
     func attributedStatText(value: Int, label: String) -> NSAttributedString {
-        //the "\n" means take another line
-        let attributedText = NSMutableAttributedString(string: "\(value)\n", attributes: [.font: UIFont.systemFont(ofSize: 22, weight: .bold)])
-        attributedText.append(NSAttributedString(string: label, attributes: [.font: UIFont.systemFont(ofSize: 16), .foregroundColor: UIColor.lightGray]))
+        //the "\n" means take another line. the good measure is fontSize = 22 and 16
+        let attributedText = NSMutableAttributedString(string: "\(value)\n", attributes: [.font: UIFont.systemFont(ofSize: 30, weight: .bold), .foregroundColor: UIColor.black])
+        attributedText.append(NSAttributedString(string: label, attributes: [.font: UIFont.systemFont(ofSize: 20), .foregroundColor: UIColor.lightGray]))
         
         return attributedText
     }
@@ -150,3 +154,4 @@ class ProfileView: UIView {
     
     
 }
+
