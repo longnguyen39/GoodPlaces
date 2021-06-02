@@ -154,8 +154,6 @@ class HomeViewController: UIViewController {
         configureUI()
         
         authentication()
-        enableLocationService()
-        fetchSavedLocations()
         protocolVC()
         
     }
@@ -199,7 +197,7 @@ class HomeViewController: UIViewController {
         
         //bottomView (appear when we tap on an anno)
         view.addSubview(self.bottomView)
-        bottomView.anchor(left: self.view.leftAnchor, bottom: self.view.bottomAnchor, right: self.view.rightAnchor, height: 170)
+        bottomView.anchor(left: self.view.leftAnchor, bottom: self.view.bottomAnchor, right: self.view.rightAnchor, height: 155)
         
         //centerButton
         view.addSubview(centerButton)
@@ -279,47 +277,19 @@ class HomeViewController: UIViewController {
     }
     
     @objc func showSettingPage() {
-        let mail = Auth.auth().currentUser?.email
-        
-        if mail == nil {
-            print("DEBUG-HomeVC: user not signed in, no Setting page..")
-            alertSignIn(Title: "Sign in required!", comment: "Please sign in to see your profile.", buttonNote1: "Cancel", buttonNote2: "Sign in")
-        } else {
-            let vc = SettingViewController()
-            showNav(controller: vc)
-        }
-        
-    }
-    
-    @objc func shareSavedLocation() {
-        let mail = Auth.auth().currentUser?.email
-        
-        if mail == nil {
-            print("DEBUG-HomeVC: user not signed in, no Friends page..")
-            alertSignIn(Title: "Sign in required!", comment: "Please sign in to see your list of friends.", buttonNote1: "Cancel", buttonNote2: "Sign in")
-        } else {
-            nowShare()
-        }
-        
+        let vc = SettingViewController()
+        showNav(controller: vc)
     }
     
     @objc func showSavedPlacesPage() {
-        let mail = Auth.auth().currentUser?.email
-        
-        if mail == nil {
-            print("DEBUG-HomeVC: user not signed in, no places page..")
-            alertSignIn(Title: "Sign in required!", comment: "Please sign in to see your saved places.", buttonNote1: "Cancel", buttonNote2: "Sign in")
-        } else {
-            let vc = savedPlacesViewController()
-            showNav(controller: vc)
-        }
-        
+        let vc = savedPlacesViewController()
+        showNav(controller: vc)
     }
     
 //MARK: - share stuff
     
     //share the location (or image if you want)
-    func nowShare() {
+    @objc func shareSavedLocation() {
         
         let url = Service.sharingLocationURL(lat: latShare!, long: longShare!, titleL: titleShare!)
         
@@ -344,31 +314,36 @@ class HomeViewController: UIViewController {
         print("DEBUG-HomeVC: user log in as \(mail)")
         
         if mail == "nil" {
-            print("DEBUG: user not logged in..")
+            print("DEBUG-HomeVC: user not logged in..")
             //usernameLabel.text = "Tap to sign in"
             showLoginPage()
         } else {
-            fetchUserData()
-            fetchSavedLocations()
+            fetchingStuff()
         }
         
     }
     
     func fetchUserData() {
         //let's fill in with data
+        print("DEBUG-HomeVC: fetching user data")
         Service.fetchUserInfo { userStuff in
             self.userInfo = userStuff
         }
     }
     
+    func fetchingStuff() {
+        fetchUserData()
+        fetchSavedLocations()
+        enableLocationService()
+    }
     
-    //let do some alerts signIn
-    func alertSignIn (Title: String, comment: String, buttonNote1: String, buttonNote2: String) {
+    //let do some alerts location
+    func alertLocation (Title: String, comment: String, buttonNote1: String, buttonNote2: String) {
         
         let alert = UIAlertController (title: Title, message: comment, preferredStyle: .alert)
         let action1 = UIAlertAction (title: buttonNote1, style: .cancel, handler: nil)
         let action2 = UIAlertAction (title: buttonNote2, style: .default) { (action) in
-            self.showLoginPage()
+            UIApplication.shared.open(URL(string:UIApplication.openSettingsURLString)!) //open the app setting
         }
         
         alert.addAction(action1)
@@ -379,18 +354,10 @@ class HomeViewController: UIViewController {
 //MARK: - Mark location
     
     @objc func markLocationTapped() {
-        let mail = Auth.auth().currentUser?.email
-        
-        if mail == nil {
-            print("DEBUG-HomeVC: user not signed in, no location mark..")
-            alertSignIn(Title: "Sign in required!", comment: "Please sign in to save places.", buttonNote1: "Cancel", buttonNote2: "Sign in")
-        } else {
-            centerCurrentLocation() //let's re-center to current location
-            //let's wait for 0.3 sec to show user his current location
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                self.textBox()
-            }
-            
+        centerCurrentLocation() //let's re-center to current location
+        //let's wait for 0.3 sec to show user his current location
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.textBox()
         }
     }
     
@@ -446,7 +413,6 @@ class HomeViewController: UIViewController {
                     self.alert(error: e, buttonNote: "OK")
                     return
                 }
-                
                 self.succesfullyMarkLocation()
             }
         }
@@ -473,7 +439,7 @@ class HomeViewController: UIViewController {
     
     func addAnnoToSavedLocations(lat: CLLocationDegrees, long: CLLocationDegrees, titleFetch: String) {
         
-        //you can use this way, or the way below (which can add title)
+        //you can use this way, or the way below it (which can add title)
 //        let coor = CLLocationCoordinate2D(latitude: lat, longitude: long)
 //        let anno = LocationAnnotation(coordinateLoca: coor)
         
@@ -571,7 +537,7 @@ class HomeViewController: UIViewController {
         Service.fetchLocations { locationArray in
             
             self.arrayLocation = locationArray
-            print("DEBUG-HomeVC: fetching locations..")
+            print("DEBUG-HomeVC: fetching all locations..")
             for info in self.arrayLocation {
                 self.addAnnoToSavedLocations(lat: info.latitude, long: info.longtitude, titleFetch: info.title)
             }
@@ -603,6 +569,7 @@ extension HomeViewController: CLLocationManagerDelegate {
             locationManager.requestAlwaysAuthorization()
         case .restricted, .denied:
             print("DEBUG: location restricted/denied")
+            alertLocation(Title: "Locations needed", comment: "Please allow GoodPlaces to access your location in Setting", buttonNote1: "Cancel", buttonNote2: "Setting")
             break
         case .authorizedAlways: //so this app only works in case of "authorizedAlways", in real app, we can modify it
             print("DEBUG: location always")
@@ -617,7 +584,8 @@ extension HomeViewController: CLLocationManagerDelegate {
         }
     }
     
-    //let's evaluate the case from HomeVC, this one need inheritance from "CLLocationManagerDelegate"
+    //let's evaluate the case from HomeVC, it activates after we done picking a case in func "enableLocationService"
+    //this one need inheritance from "CLLocationManagerDelegate"
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         
         if status == .authorizedWhenInUse {
@@ -627,7 +595,7 @@ extension HomeViewController: CLLocationManagerDelegate {
             print("DEBUG: current status is always")
         } else if status == .denied {
             print("DEBUG: current status is denied")
-            locationManager.requestWhenInUseAuthorization()
+            alertLocation(Title: "Locations needed", comment: "Please allow GoodPlaces to access your location in Setting", buttonNote1: "Cancel", buttonNote2: "Setting")
         }
     }
     

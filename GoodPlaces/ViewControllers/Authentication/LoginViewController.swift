@@ -17,7 +17,7 @@ class LoginViewController: UIViewController {
     
     weak var delegate: LoginViewControllerDelegate?
 
-    private var logoD: CGFloat = 80
+    private var logoD: CGFloat = 100
     private var viewModel = ViewModelLogin()
     
     //MARK: - Components
@@ -54,11 +54,12 @@ class LoginViewController: UIViewController {
     
     private let logoIcon: UIImageView = {
         let iv = UIImageView()
-        iv.image = UIImage(systemName: "building.columns")
+//        iv.image = UIImage(systemName: "building.columns")
+        iv.image = #imageLiteral(resourceName: "1024gp")
         iv.tintColor = .black
         iv.clipsToBounds = true
         iv.contentMode = .scaleAspectFit
-        iv.layer.backgroundColor = #colorLiteral(red: 0.9686274529, green: 0.78039217, blue: 0.3450980484, alpha: 1)
+//        iv.layer.backgroundColor = #colorLiteral(red: 0.9686274529, green: 0.78039217, blue: 0.3450980484, alpha: 1)
         
         return iv
     }()
@@ -111,8 +112,8 @@ class LoginViewController: UIViewController {
         dismissButton.alpha = 0
         formValidation()
         
-        emailInputView.textField.text = "1@gmail.co"
-        passwordInputView.textField.text = "qqqqq"
+//        emailInputView.textField.text = "1@gmail.co"
+//        passwordInputView.textField.text = "qqqqq"
     }
     
     
@@ -134,7 +135,7 @@ class LoginViewController: UIViewController {
         
         //titleLabel and logoIcon
         view.addSubview(titleLabel)
-        titleLabel.anchor(top: dismissButton.bottomAnchor, paddingTop: 20)
+        titleLabel.anchor(top: dismissButton.bottomAnchor, paddingTop: 8)
         titleLabel.centerX(inView: view)
         
         view.addSubview(logoIcon)
@@ -238,8 +239,7 @@ class LoginViewController: UIViewController {
             
             //let's call out the func from HomeVC
             guard let controller = UIApplication.shared.keyWindow?.rootViewController as? HomeViewController else { return }
-            controller.fetchUserData()
-            controller.fetchSavedLocations()
+            controller.fetchingStuff()
             
             print("DEBUG-LoginVC: log in \(emailTyped) successfully")
             self.dismiss(animated: true, completion: nil)

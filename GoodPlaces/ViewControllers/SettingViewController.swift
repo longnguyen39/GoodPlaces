@@ -46,8 +46,8 @@ class SettingViewController: UIViewController {
         swipeGesture()
         profileView.delegate = self
         
-        editUsernameButton.addTarget(self, action: #selector(changeUsername), for: .touchUpInside)
-        editProfileImageButton.addTarget(self, action: #selector(changeProfileImage), for: .touchUpInside)
+        editUsernameButton.addTarget(self, action: #selector(textBox), for: .touchUpInside)
+        editProfileImageButton.addTarget(self, action: #selector(imageTapped), for: .touchUpInside)
     }
     
     
@@ -109,17 +109,10 @@ class SettingViewController: UIViewController {
         }
     }
     
-    @objc func changeUsername() {
-        textBox()
-    }
-    
-    @objc func changeProfileImage() {
-        imageTapped()
-    }
     
 //MARK: - Text Box
     
-    func textBox() {
+    @objc func textBox() {
         var textField = UITextField()
         
         let alertBox = UIAlertController(title: "Edit username", message: "Rename to...", preferredStyle: .alert)
@@ -207,7 +200,7 @@ class SettingViewController: UIViewController {
     }
     
 //MARK: - change profileImage
-    func imageTapped() {
+    @objc func imageTapped() {
         let picker = UIImagePickerController()
         picker.delegate = self
         picker.allowsEditing = true

@@ -221,8 +221,7 @@ class SignupViewController: UIViewController {
             }
             
             guard let controller = UIApplication.shared.keyWindow?.rootViewController as? HomeViewController else { return }
-            controller.fetchUserData()
-            controller.fetchSavedLocations()
+            controller.fetchingStuff()
             
             self.dismiss(animated: true)
             print("DEBUG-SignUpVC: done signUp user \(emailTyped)")

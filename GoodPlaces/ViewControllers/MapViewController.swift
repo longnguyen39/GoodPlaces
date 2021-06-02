@@ -363,6 +363,20 @@ extension MapViewController: MKMapViewDelegate {
 //remember to modify the info.plist (go to Notes to see details) before writing these codes, otherwise it crashes
 extension MapViewController: CLLocationManagerDelegate {
     
+    //let do some alerts location
+    func alertLocation () {
+        
+        let alert = UIAlertController (title: "Location needed", message: "Please allow GoodPlaces to access your location in Setting", preferredStyle: .alert)
+        let action1 = UIAlertAction (title: "Cancel", style: .cancel, handler: nil)
+        let action2 = UIAlertAction (title: "Setting", style: .default) { (action) in
+            UIApplication.shared.open(URL(string:UIApplication.openSettingsURLString)!) //open the app setting
+        }
+        
+        alert.addAction(action1)
+        alert.addAction(action2)
+        present (alert, animated: true, completion: nil)
+    }
+    
     //this func will check the location status of the app and enable us to obtain the coordinates of the user.
     //remember to call it in ViewDidLoad
     func enableLocationService() {
@@ -379,6 +393,7 @@ extension MapViewController: CLLocationManagerDelegate {
             locationManager.requestAlwaysAuthorization()
         case .restricted, .denied:
             print("DEBUG: location restricted/denied")
+            alertLocation()
             break
         case .authorizedAlways: //so this app only works in case of "authorizedAlways", in real app, we can modify it
             print("DEBUG: location always")
@@ -393,7 +408,8 @@ extension MapViewController: CLLocationManagerDelegate {
         }
     }
     
-    //let's evaluate the case from HomeVC, this one need inheritance from "CLLocationManagerDelegate"
+    //let's evaluate the case from HomeVC, it activates after we done picking a case in func "enableLocationService"
+    //this one need inheritance from "CLLocationManagerDelegate"
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         
         if status == .authorizedWhenInUse {
@@ -403,7 +419,7 @@ extension MapViewController: CLLocationManagerDelegate {
             print("DEBUG: current status is always")
         } else if status == .denied {
             print("DEBUG: current status is denied")
-            locationManager.requestWhenInUseAuthorization()
+            alertLocation()
         }
     }
     
