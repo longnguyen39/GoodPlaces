@@ -19,7 +19,7 @@ class savedPlacesViewController: UIViewController {
     
     //got filled by func "fetchSavedLocations"
     var savedLocationsArray = [SavedLocations]()
-    private var didDeleteRow = false
+    private var didDeleteOrRename = false
     
 //MARK: - Components
     
@@ -132,6 +132,7 @@ class savedPlacesViewController: UIViewController {
             print("DEBUG-SavedPlacesVC: title renamed notified..")
             guard let strongSelf = self else { return }
             strongSelf.fetchSavedLocations()
+            strongSelf.didDeleteOrRename = true
         }
     }
     
@@ -152,12 +153,12 @@ class savedPlacesViewController: UIViewController {
     
     @objc func dismissSavedPlacesVC() {
         
-        if didDeleteRow {
-            print("DEBUG-SavedPlaces: row deleted")
+        if didDeleteOrRename {
+            print("DEBUG-SavedPlaces: row deleted or renamed")
             //send the notification to HomeVC to reload and fetch data
-            NotificationCenter.default.post(name: .didDeleteItem, object: nil)
+            NotificationCenter.default.post(name: .didDeleteOrRenameItem, object: nil)
         } else {
-            print("DEBUG-SavedPlaces: no row deleted")
+            print("DEBUG-SavedPlaces: no deletion or rename")
         }
         
         dismiss(animated: true, completion: nil)
@@ -202,7 +203,7 @@ class savedPlacesViewController: UIViewController {
         }
     }
     
-//MARK: - Deletion
+//MARK: - Deletion, Share
     
     func confirmDeleteAndShareAlert(rowIndex: Int, titleDeleted: String) {
         let alert = UIAlertController (title: "Deleted this item?", message: "\"\(titleDeleted)\" will be permanently deleted from the server", preferredStyle: .alert)
@@ -237,23 +238,30 @@ class savedPlacesViewController: UIViewController {
             print("DEBUG-SavedPlacesVC: sucessfully deleting item")
             self.showSuccess(show: false, view: self.view) //got few secs delayed
             self.fetchSavedLocations()
-            self.didDeleteRow = true
+            self.didDeleteOrRename = true
         }
     }
     
     //share the location (or image if you want)
     func nowShare(rowNumber: Int) {
-        let titleLocation = savedLocationsArray[rowNumber].title
+        var titleLocation = savedLocationsArray[rowNumber].title
         let lati = savedLocationsArray[rowNumber].latitude
         let longi = savedLocationsArray[rowNumber].longtitude
         
-        let url = Service.sharingLocationURL(lat: lati, long: longi, titleL: titleLocation)
+        var urlString = Service.sharingLocationURL(lat: lati, long: longi, titleL: titleLocation)
         
-        guard let LocationUrl = URL(string: url) else {
-            print("DEBUG-MapVC: error setting urlString for sharing")
-            self.alert(error: "Please make sure that the name of the location has no apostrophe ", buttonNote: "OK")
-            return
+        //let's verify the url before sharing
+        if let urlTest = URL(string: urlString) {
+            print("DEBUG-SavedPlacesVC: url is good \(urlTest)")
+        } else {
+            print("DEBUG-SavedPlacesVC: url is bad, gotta construct it")
+            titleLocation = "SavedPlace"
+            urlString = Service.sharingLocationURL(lat: lati, long: longi, titleL: titleLocation)
         }
+        
+        //now we share the url of location
+        guard let LocationUrl = URL(string: urlString) else { return }
+        print("DEBUG-SavedPlacesVC: url is \(LocationUrl)")
         
         let shareText = "Share \"\(titleLocation)\""
         
@@ -363,7 +371,7 @@ extension savedPlacesViewController: UICollectionViewDataSource {
 
 extension savedPlacesViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        print("DEBUG-savedPlacesVC: ")
+        print("DEBUG-savedPlacesVC: a cell is tapped")
         
         let vc = MapViewController()
         vc.locationInfo = savedLocationsArray[indexPath.row]

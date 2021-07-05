@@ -39,7 +39,17 @@ class MapViewController: UIViewController {
         lb.textAlignment = .center
         lb.font = UIFont.systemFont(ofSize: 18, weight: .regular)
         lb.textColor = .black
-        lb.isUserInteractionEnabled = true
+        lb.adjustsFontSizeToFitWidth = true
+        
+        return lb
+    }()
+    
+    private var altLabel: UILabel = {
+        let lb = UILabel()
+        lb.text = "0.0 m"
+        lb.textAlignment = .center
+        lb.font = UIFont.systemFont(ofSize: 18, weight: .regular)
+        lb.textColor = .black
         lb.adjustsFontSizeToFitWidth = true
         
         return lb
@@ -47,8 +57,8 @@ class MapViewController: UIViewController {
     
     private let zoomInButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setBackgroundImage(UIImage(systemName: "arrow.down.forward.and.arrow.up.backward.circle"), for: .normal)
-        btn.backgroundColor = .clear
+        btn.setBackgroundImage(UIImage(systemName: "arrow.down.circle"), for: .normal)
+//        btn.backgroundColor = .white
         btn.tintColor = .black
         btn.addTarget(self, action: #selector(zoomInAnnotation), for: .touchUpInside)
         
@@ -68,8 +78,8 @@ class MapViewController: UIViewController {
     
     private let zoomOutButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setBackgroundImage(UIImage(systemName: "arrow.up.backward.and.arrow.down.forward.circle"), for: .normal)
-        btn.backgroundColor = .clear
+        btn.setBackgroundImage(UIImage(systemName: "arrow.up.circle"), for: .normal)
+//        btn.backgroundColor = .white
         btn.tintColor = .black
         btn.addTarget(self, action: #selector(zoomOutAnnotation), for: .touchUpInside)
         
@@ -91,9 +101,9 @@ class MapViewController: UIViewController {
     func configureUI() {
         view.backgroundColor = .white
         guard let titlePrivate = locationInfo?.title else { return }
-        configureNavigationBar(title: titlePrivate, preferLargeTitle: false, backgroundColor: #colorLiteral(red: 0.2898526224, green: 0.9193441901, blue: 0.5178573741, alpha: 1), buttonColor: .blue)
+        configureNavigationBar(title: titlePrivate, preferLargeTitle: false, backgroundColor: #colorLiteral(red: 0.2898526224, green: 0.9193441901, blue: 0.5178573741, alpha: 1), buttonColor: #colorLiteral(red: 0.1665159579, green: 0.1925592278, blue: 0.5612046632, alpha: 1))
         
-        navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "chevron.backward"), style: .done, target: self, action: #selector(backToList))
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "arrow.left"), style: .done, target: self, action: #selector(backToList))
         
         //set multiple barButtonItems on the right
         let btn1 = UIBarButtonItem(image: UIImage(systemName: "paperplane"), style: .done, target: self, action: #selector(shareLocation))
@@ -107,6 +117,11 @@ class MapViewController: UIViewController {
         distanceView.addSubview(distanceLabel)
         distanceLabel.anchor(left: distanceView.leftAnchor, right: distanceView.rightAnchor, paddingLeft: 10, paddingRight: 10)
         distanceLabel.centerY(inView: distanceView)
+        
+        //altitude stuff
+        view.addSubview(altLabel)
+        altLabel.anchor(left: view.leftAnchor, paddingLeft: 12)
+        altLabel.centerY(inView: distanceView)
         
         //zoomInButton
         view.addSubview(zoomInButton)
@@ -186,13 +201,17 @@ class MapViewController: UIViewController {
         guard let lati = locationInfo?.latitude else { return }
         guard let longi = locationInfo?.longtitude else { return }
         
-        let url = Service.sharingLocationURL(lat: lati, long: longi, titleL: titleLocation)
+        var urlString = Service.sharingLocationURL(lat: lati, long: longi, titleL: titleLocation)
         
-        guard let LocationUrl = URL(string: url) else {
-            print("DEBUG-MapVC: error setting urlString for sharing")
-            self.alert(error: "Please make sure that the name of the location has no apostrophe ", buttonNote: "OK")
-            return
+        //let's verify the url before sharing
+        if let urlTest = URL(string: urlString) {
+            print("DEBUG-MapVC: url is good \(urlTest)")
+        } else {
+            print("DEBUG-MapVC: url is bad, gotta construct it")
+            urlString = Service.sharingLocationURL(lat: lati, long: longi, titleL: "SavedPlaces")
         }
+        
+        guard let LocationUrl = URL(string: urlString) else { return }
         
         let shareText = "Share \"\(titleLocation)\""
         
@@ -225,6 +244,9 @@ class MapViewController: UIViewController {
         
         //let's indicate the distance label
         distanceInMile(lat: lati, long: longi)
+        
+        //let's add the altitude label
+        altitudeInMeter()
     }
 
     
@@ -268,6 +290,12 @@ class MapViewController: UIViewController {
         let d = String(format: "%.1f", distanceMile) //round to 1 decimals
 
         self.distanceLabel.text = "\(d) mi"
+    }
+    
+    func altitudeInMeter() {
+        guard let alt = locationInfo?.altitude else { return }
+        let a = String(format: "%.2f", alt)
+        altLabel.text = "\(a) m"
     }
     
     

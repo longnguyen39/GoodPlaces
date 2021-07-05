@@ -25,6 +25,7 @@ class LocationCell: UITableViewCell {
         let lb = UILabel()
         lb.text = "Loading..."
         lb.textColor = .black
+        lb.numberOfLines = 2
         lb.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         
         return lb
@@ -39,7 +40,7 @@ class LocationCell: UITableViewCell {
         mapView.isUserInteractionEnabled = false
         mapView.overrideUserInterfaceStyle = .light
         
-        //the ROWHEIGHT is ONLY specified in the MapVC, NO where else
+        //the ROWHEIGHT is ONLY specified in the SavedPlacesVC, NO where else
         accessoryType = .disclosureIndicator
         backgroundColor = .clear
         
@@ -53,7 +54,7 @@ class LocationCell: UITableViewCell {
         
         //titleLabel
         addSubview(titleLabel)
-        titleLabel.anchor(left: mapView.rightAnchor, paddingLeft: 8)
+        titleLabel.anchor(left: mapView.rightAnchor, right: rightAnchor, paddingLeft: 8, paddingRight: 22)
         titleLabel.centerY(inView: mapView)
         
     }

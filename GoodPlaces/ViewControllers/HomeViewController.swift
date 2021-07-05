@@ -14,14 +14,15 @@ import SDWebImage
 
 class HomeViewController: UIViewController {
 
-    private var btnD: CGFloat = 36
+//    private var btnD: CGFloat = 36 //this is wrong for lower iOS
+    private var btnD: CGFloat = 40 //try this one for lower iOS
     private var ivD: CGFloat = 32
     
     private let mapView = MKMapView()
     private var locationManager: CLLocationManager!
     
     private var logOutObserver: NSObjectProtocol?
-    private var deletionObserver: NSObjectProtocol?
+    private var deletionOrRenameObserver: NSObjectProtocol?
     private var userInfoObserver: NSObjectProtocol?
     
     private var profileURL: URL? {
@@ -42,18 +43,30 @@ class HomeViewController: UIViewController {
     
 //MARK: - Components
     
+    //this is invalid for lower iOS version
+//    private let savedPlacesButton: UIButton = {
+//        let btn = UIButton(type: .system)
+//        btn.setBackgroundImage(UIImage(systemName: "bookmark.circle.fill"), for: .normal)
+//        btn.tintColor = .white
+//        btn.backgroundColor = .black
+//        btn.addTarget(self, action: #selector(showSavedPlacesPage), for: .touchUpInside)
+//
+//        return btn
+//    }()
+    
+    //try this code for the lower iOS version
     private let savedPlacesButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setBackgroundImage(UIImage(systemName: "bookmark.circle.fill"), for: .normal)
-        btn.tintColor = .white
-        btn.backgroundColor = .black
+        btn.setBackgroundImage(UIImage(systemName: "bookmark.circle"), for: .normal)
+        btn.tintColor = .black
+        btn.backgroundColor = .clear
         btn.addTarget(self, action: #selector(showSavedPlacesPage), for: .touchUpInside)
         
         return btn
     }()
 
-    
-    private let shareButton: UIButton = {
+    //gotta have 2 layers to test out different iOS versions
+    private let shareButtonLayer1: UIButton = {
         let btn = UIButton(type: .system)
         btn.setBackgroundImage(UIImage(systemName: "paperplane.circle.fill"), for: .normal)
         btn.tintColor = .white
@@ -63,6 +76,17 @@ class HomeViewController: UIViewController {
         
         return btn
     }()
+    private let shareButtonLayer2: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setBackgroundImage(UIImage(systemName: "paperplane.circle"), for: .normal)
+        btn.tintColor = .blue
+        btn.backgroundColor = .clear
+        btn.alpha = 0 //for animation stuff
+        btn.addTarget(self, action: #selector(shareSavedLocation), for: .touchUpInside)
+        
+        return btn
+    }()
+    
     
     //gotta make this "lazy var" to load the tap gesture
     private lazy var labelView: UIView = {
@@ -110,6 +134,16 @@ class HomeViewController: UIViewController {
         return lb
     }()
     
+    private var labelAlt: UILabel = {
+        let lb = UILabel()
+        lb.text = "..."
+        lb.textColor = .black
+        lb.textAlignment = .center
+        lb.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        
+        return lb
+    }()
+    
     private let markLocationButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("Mark location", for: .normal)
@@ -127,6 +161,16 @@ class HomeViewController: UIViewController {
         btn.backgroundColor = .clear
         btn.tintColor = .black
         btn.addTarget(self, action: #selector(centerCurrentLocation), for: .touchUpInside)
+        
+        return btn
+    }()
+    
+    private let zoomInButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setBackgroundImage(UIImage(systemName: "arrow.down.forward.and.arrow.up.backward.circle"), for: .normal)
+        btn.backgroundColor = .clear
+        btn.tintColor = .black
+        btn.addTarget(self, action: #selector(zoomCurrentLocation), for: .touchUpInside)
         
         return btn
     }()
@@ -172,18 +216,31 @@ class HomeViewController: UIViewController {
         savedPlacesButton.setDimensions(height: btnD-2, width: btnD-2)
         savedPlacesButton.layer.cornerRadius = (btnD-2) / 2
         
-        //shareButton
-        view.addSubview(shareButton)
-        shareButton.anchor(right: view.rightAnchor, paddingRight: 12)
-        shareButton.centerY(inView: savedPlacesButton)
-        shareButton.setDimensions(height: btnD, width: btnD)
-        shareButton.layer.cornerRadius = btnD/2
-        shareButton.isHidden = true
+        //labelAlt
+        view.addSubview(labelAlt)
+        labelAlt.anchor(top: savedPlacesButton.bottomAnchor, left: savedPlacesButton.leftAnchor, paddingTop: 12)
+        labelAlt.isHidden = true
+        
+        //shareButtonLayer1
+        view.addSubview(shareButtonLayer1)
+        shareButtonLayer1.anchor(right: view.rightAnchor, paddingRight: 12)
+        shareButtonLayer1.centerY(inView: savedPlacesButton)
+        shareButtonLayer1.setDimensions(height: btnD, width: btnD)
+        shareButtonLayer1.layer.cornerRadius = btnD/2
+        shareButtonLayer1.isHidden = true
+        
+        //shareButtonLayer2
+        view.addSubview(shareButtonLayer2)
+        shareButtonLayer2.anchor(right: view.rightAnchor, paddingRight: 12)
+        shareButtonLayer2.centerY(inView: savedPlacesButton)
+        shareButtonLayer2.setDimensions(height: btnD, width: btnD)
+        shareButtonLayer2.layer.cornerRadius = btnD/2
+        shareButtonLayer2.isHidden = true
         
         //emailLabel and view
         view.addSubview(labelView)
         labelView.centerY(inView: savedPlacesButton)
-        labelView.anchor(left: savedPlacesButton.rightAnchor, right: shareButton.leftAnchor, paddingLeft: 28, paddingRight: 28, height: btnD)
+        labelView.anchor(left: savedPlacesButton.rightAnchor, right: shareButtonLayer1.leftAnchor, paddingLeft: 28, paddingRight: 28, height: btnD)
         
         labelView.addSubview(profileImageView)
         profileImageView.anchor(left: labelView.leftAnchor, paddingLeft: 6)
@@ -203,6 +260,9 @@ class HomeViewController: UIViewController {
         view.addSubview(centerButton)
         centerButton.anchor(bottom: view.safeAreaLayoutGuide.bottomAnchor, right: view.rightAnchor, paddingBottom: 20, paddingRight: 16, width: 50, height: 50)
         
+        //zoomInButton
+        view.addSubview(zoomInButton)
+        zoomInButton.anchor(bottom: centerButton.topAnchor, right: centerButton.rightAnchor, paddingBottom: 12, width: 50, height: 50)
         
         //markLocationButton
         view.addSubview(markLocationButton)
@@ -221,7 +281,6 @@ class HomeViewController: UIViewController {
         mapView.showsUserLocation = true //show a blue dot indicating current location
         mapView.userTrackingMode = .follow //detect when user is moving. in the simulator, go on the status bar on top, tap "Feature" -> "Location" -> "custom location", and change the lat/longtitude
         mapView.delegate = self
-        
     }
     
 //MARK: - Protocol VC
@@ -238,7 +297,7 @@ class HomeViewController: UIViewController {
             strongSelf.showLoginPage()
         }
         
-        deletionObserver = NotificationCenter.default.addObserver(forName: .didDeleteItem, object: nil, queue: .main) { [weak self] _ in
+        deletionOrRenameObserver = NotificationCenter.default.addObserver(forName: .didDeleteOrRenameItem, object: nil, queue: .main) { [weak self] _ in
             
             print("DEBUG-HomeVC: item deleted notified..")
             guard let strongSelf = self else { return }
@@ -259,7 +318,7 @@ class HomeViewController: UIViewController {
         if let observer1 = logOutObserver {
             NotificationCenter.default.removeObserver(observer1)
         }
-        if let observer2 = deletionObserver {
+        if let observer2 = deletionOrRenameObserver {
             NotificationCenter.default.removeObserver(observer2)
         }
         if let observer3 = userInfoObserver {
@@ -290,15 +349,20 @@ class HomeViewController: UIViewController {
     
     //share the location (or image if you want)
     @objc func shareSavedLocation() {
-        
-        let url = Service.sharingLocationURL(lat: latShare!, long: longShare!, titleL: titleShare!)
-        
         guard let titleForShare = titleShare else { return }
-        guard let LocationUrl = URL(string: url) else {
-            print("DEBUG-MapVC: error setting urlString for sharing")
-            self.alert(error: "Please make sure that the name of the location has no apostrophe ", buttonNote: "OK")
-            return
+        
+        var url = Service.sharingLocationURL(lat: latShare!, long: longShare!, titleL: titleForShare)
+        
+        //let's verify the url before sharing
+        if let urlTest = URL(string: url) {
+            print("DEBUG-HomeVC: url is good \(urlTest)")
+        } else {
+            print("DEBUG-HomeVC: url is bad, gotta construct it")
+            url = Service.sharingLocationURL(lat: latShare!, long: longShare!, titleL: "SavedPlace")
         }
+        
+        guard let LocationUrl = URL(string: url) else { return }
+        print("DEBUG-HomeVC: locationURL is \(LocationUrl)")
         
         let shareText = "Share \"\(titleForShare)\""
         
@@ -396,13 +460,11 @@ class HomeViewController: UIViewController {
     func markLocation() {
         print("DEBUG-HomeVC: marking current location..")
         
-        guard let lat = locationManager.location?.coordinate.latitude else {
-            print("DEBUG-HomeVC: error setting current location")
-            return
-        }
-        guard let long = locationManager.location?.coordinate.longitude else { return }
+        guard let latitude = locationManager.location?.coordinate.latitude else { return }
+        guard let longitude = locationManager.location?.coordinate.longitude else { return }
+        guard let altitude = locationManager.location?.altitude else { return } // altitude in meters
         
-        Service.uploadLocation(title: titleNote, lat: lat, long: long) { error in
+        Service.uploadLocation(title: titleNote, lat: latitude, long: longitude, alt: altitude) { error in
             
             //let's delay for 0.3 sec to show user the loadingIndicator
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -437,15 +499,17 @@ class HomeViewController: UIViewController {
         mapView.selectAnnotation(anno, animated: true) //make anno big and standout
     }
     
-    func addAnnoToSavedLocations(lat: CLLocationDegrees, long: CLLocationDegrees, titleFetch: String) {
+    func addAnnoToSavedLocations(lat: CLLocationDegrees, long: CLLocationDegrees, titleFetch: String, alt: Double) {
         
         //you can use this way, or the way below it (which can add title)
 //        let coor = CLLocationCoordinate2D(latitude: lat, longitude: long)
 //        let anno = LocationAnnotation(coordinateLoca: coor)
         
         let anno = MKPointAnnotation()
+        let stringAlt = String(format: "%.2f", alt)
         anno.coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
         anno.title = titleFetch
+        anno.subtitle = "\(stringAlt) m"
         mapView.addAnnotation(anno)
     }
     
@@ -461,7 +525,15 @@ class HomeViewController: UIViewController {
     
     @objc func centerCurrentLocation() {
         guard let coordinate = locationManager?.location?.coordinate else { return }
-        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 1000, longitudinalMeters: 1000) //we got 2000 meters around the current location
+        
+        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 1000, longitudinalMeters: 1000) //we got 1000 meters around the current location
+        mapView.setRegion(region, animated: true)
+    }
+    
+    @objc func zoomCurrentLocation() {
+        guard let coordinate = locationManager?.location?.coordinate else { return }
+        
+        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 10, longitudinalMeters: 10)
         mapView.setRegion(region, animated: true)
     }
     
@@ -490,19 +562,28 @@ class HomeViewController: UIViewController {
     
     //MARK: - BottomAction
     
-    func configureBottomAction(title: String, distance: String) {
+    func configureBottomAction(title: String, distance: String, altitude: String) {
         UIView.animate(withDuration: 0.3) {
             self.markLocationButton.alpha = 0
             self.centerButton.alpha = 0
+            self.zoomInButton.alpha = 0
         } completion: { _ in
             self.bottomView.isHidden = false
-            self.shareButton.isHidden = false
-            self.bottomView.delegate = self //for protocol from bottomView
+            self.shareButtonLayer1.isHidden = true //test out different iOS
+            self.shareButtonLayer2.isHidden = false
+            self.labelAlt.isHidden = false
+            
+            //pass the data
+            self.bottomView.delegate = self
             self.bottomView.titleLabel = title
             self.bottomView.distanceMile = distance
+            self.labelAlt.text = altitude
+            
             UIView.animate(withDuration: 0.3) {
                 self.bottomView.alpha = 1
-                self.shareButton.alpha = 1
+                self.shareButtonLayer1.alpha = 1
+                self.shareButtonLayer2.alpha = 1
+                self.labelAlt.alpha = 1
             }
         }
         
@@ -535,11 +616,11 @@ class HomeViewController: UIViewController {
     func fetchSavedLocations() {
         //after we have the big array of all savedLocation, loop through that array and for each loop, we add an anno to it
         Service.fetchLocations { locationArray in
-            
-            self.arrayLocation = locationArray
             print("DEBUG-HomeVC: fetching all locations..")
+            self.arrayLocation = locationArray
+            
             for info in self.arrayLocation {
-                self.addAnnoToSavedLocations(lat: info.latitude, long: info.longtitude, titleFetch: info.title)
+                self.addAnnoToSavedLocations(lat: info.latitude, long: info.longtitude, titleFetch: info.title, alt: info.altitude)
             }
             print("DEBUG-HomeVC: done adding all anno of savedLocations")
         }
@@ -624,13 +705,14 @@ extension HomeViewController: MKMapViewDelegate {
         guard let toCoor = view.annotation?.coordinate else { return }
         guard let coorCurrent = locationManager.location?.coordinate else { return }
         guard let titleDestination = view.annotation?.title else { return }
+        guard let altDestination = view.annotation?.subtitle else { return }
         guard let distanceToD = distanceInMile(lat: toCoor.latitude, long: toCoor.longitude) else { return }
         
         let anno1 = MKPointAnnotation()
         anno1.coordinate = toCoor
         let anno2 = MKPointAnnotation()
         anno2.coordinate = coorCurrent
-        let array = [anno1, anno2] //has currentLocation and destination
+        let array = [anno1, anno2] //has currentLocation and destination to zoom
         
         //let's check if user pick the same OR different anno
         let pickedAnno = SelectedAnno(lat: toCoor.latitude, long: toCoor.longitude, title: titleDestination)
@@ -645,14 +727,16 @@ extension HomeViewController: MKMapViewDelegate {
                 guard let polyline = self.route?.polyline else { return }
                 self.mapView.removeOverlay(polyline)
                 
-                //present a new one, zoom to it, update info of BottomAction
+                //set some info for the new anno
                 arrayTwoAnno = array
                 selectedAnnoInfo = SelectedAnno(lat: toCoor.latitude, long: toCoor.longitude, title: titleDestination) //for checking if user has tapped on this anno
                 
-                //let's do some cool stuff
+                //let's present a polyline, zoom to it, and show bottomAction
                 generatePolyline(toCoor: toCoor)
                 mapView.zoomToFit(annotations: self.arrayTwoAnno) //zoom to 2 points in the array
-                configureBottomAction(title: titleDestination ?? "nope", distance: distanceToD)
+                configureBottomAction(title: titleDestination ?? "nope", distance: distanceToD, altitude: altDestination ?? "none")
+                
+                //assign the info so that we can indicate duplicating taps
                 latShare = toCoor.latitude
                 longShare = toCoor.longitude
                 titleShare = titleDestination
@@ -666,7 +750,9 @@ extension HomeViewController: MKMapViewDelegate {
                 //let's do some cool stuff
                 generatePolyline(toCoor: toCoor)
                 mapView.zoomToFit(annotations: self.arrayTwoAnno) //zoom to 2 points in the array
-                configureBottomAction(title: titleDestination ?? "nope", distance: distanceToD)
+                configureBottomAction(title: titleDestination ?? "nope", distance: distanceToD, altitude: altDestination ?? "none")
+                
+                //assign the info so that we can indicate duplicating taps
                 latShare = toCoor.latitude
                 longShare = toCoor.longitude
                 titleShare = titleDestination
@@ -696,13 +782,18 @@ extension HomeViewController: BottomActionDelegate {
         
         UIView.animate(withDuration: 0.3) {
             self.bottomView.alpha = 0
-            self.shareButton.alpha = 0
+            self.shareButtonLayer1.alpha = 0
+            self.shareButtonLayer2.alpha = 0
+            self.labelAlt.alpha = 0
         } completion: { _ in
             self.bottomView.isHidden = true
-            self.shareButton.isHidden = true
+            self.shareButtonLayer1.isHidden = true
+            self.shareButtonLayer2.isHidden = true
+            self.labelAlt.isHidden = true
             UIView.animate(withDuration: 0.3) {
                 self.markLocationButton.alpha = 1
                 self.centerButton.alpha = 1
+                self.zoomInButton.alpha = 1
             }
         }
     }

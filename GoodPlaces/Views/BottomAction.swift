@@ -40,7 +40,7 @@ class BottomAction: UIView {
         lb.text = "Loading..."
         lb.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         lb.textColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1).withAlphaComponent(0.8)
-        lb.numberOfLines = 2
+        lb.numberOfLines = 1
 //        lb.adjustsFontSizeToFitWidth = true
         
         return lb

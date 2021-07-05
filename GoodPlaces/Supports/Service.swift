@@ -59,7 +59,7 @@ struct Service {
     }
     
     
-    static func uploadLocation(title: String, lat: CLLocationDegrees, long: CLLocationDegrees, completionBlock: @escaping(Error?) -> Void) {
+    static func uploadLocation(title: String, lat: CLLocationDegrees, long: CLLocationDegrees, alt: CLLocationDistance, completionBlock: @escaping(Error?) -> Void) {
         
         guard let email = Auth.auth().currentUser?.email else { return }
         
@@ -75,6 +75,7 @@ struct Service {
         let data = [
             "latitude": lat,
             "longitude": long,
+            "altitude": alt,
             "title": title,
             "timestamp": timeKey
         ] as [String : Any]
@@ -97,7 +98,7 @@ struct Service {
             let locationArray = documents.map({
                 SavedLocations(dictionary: $0.data()) //get all data in a document
             })
-            print("DEBUG-Service: big array notifi is: \(locationArray)")
+            print("DEBUG-Service: big array of all locations is: \(locationArray)")
             completionBlock(locationArray)
         }
     }
@@ -118,7 +119,8 @@ struct Service {
     static func sharingLocationURL(lat: Double, long: Double, titleL: String) -> String {
         
         let titleNoSpace = titleL.replacingOccurrences(of: " ", with: "") //to construct the url
-        let urlString = "https://maps.apple.com?ll=\(lat),\(long)&q=\(titleNoSpace)&_ext=EiQpzUnuGHYRQUAx0xl+LFqWXcA5zUnuGHYRQUBB0xl+LFqWXcA%3D&t=m" //this url is contructed from messing up with telegram
+//        let titleClear = titleNoSpace.
+        let urlString = "https://maps.apple.com?ll=\(lat),\(long)&q=\(titleNoSpace)&_ext=EiQpzUnuGHYRQUAx0xl+LFqWXcA5zUnuGHYRQUBB0xl+LFqWXcA%3D&t=m" //this url is contructed from playing with telegram
         
         return urlString
     }
